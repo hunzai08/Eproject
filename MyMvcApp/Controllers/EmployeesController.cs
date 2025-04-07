@@ -58,40 +58,41 @@ namespace MyMvcApp.Controllers
         // POST: Employees/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Employees/Create
+        // POST: Employees/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("EmployeeId,FirstName,LastName,Email,PhoneNumber,HireDate,JobId,Salary,CommissionPct,ManagerId,DepartmentId")] Employee employee)
         {
+            // Validate if the model state is valid (including the EmployeeId input from the user)
             if (ModelState.IsValid)
             {
-                _context.Add(employee);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Add the new employee to the context
+                    _context.Add(employee);
+                    await _context.SaveChangesAsync();
+                    // Redirect to the list of employees after the employee is added successfully
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception (optional, but can be helpful for debugging)
+                    // Add some error handling logic here (optional)
+                    ModelState.AddModelError("", "There was an error saving the employee.");
+                }
             }
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "DepartmentId", "DepartmentId", employee.DepartmentId);
+
+            // In case of an invalid model, re-populate the dropdowns for JobId, ManagerId, and DepartmentId
             ViewData["JobId"] = new SelectList(_context.Jobs, "JobId", "JobId", employee.JobId);
             ViewData["ManagerId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId", employee.ManagerId);
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "DepartmentId", "DepartmentId", employee.DepartmentId);
+
+            // Return the view again with the invalid model so the user can correct it
             return View(employee);
         }
 
-        // GET: Employees/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "DepartmentId", "DepartmentId", employee.DepartmentId);
-            ViewData["JobId"] = new SelectList(_context.Jobs, "JobId", "JobId", employee.JobId);
-            ViewData["ManagerId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId", employee.ManagerId);
-            return View(employee);
-        }
 
         // POST: Employees/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.

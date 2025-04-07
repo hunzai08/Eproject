@@ -57,12 +57,25 @@ namespace MyMvcApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Ensure that RegionId is unique to avoid the primary key violation.
+                var existingRegion = await _context.Regions
+                    .FirstOrDefaultAsync(r => r.RegionId == region.RegionId);
+
+                if (existingRegion != null)
+                {
+                    // Add a custom error if the RegionId already exists.
+                    ModelState.AddModelError("RegionId", "A region with this ID already exists.");
+                    return View(region);
+                }
+
+                // If the RegionId is unique, add the new region.
                 _context.Add(region);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(region);
         }
+
 
         // GET: Regions/Edit/5
         public async Task<IActionResult> Edit(int? id)
